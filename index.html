@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.io Test</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Socket.io Test</h1>
+  <ul id="messages"></ul>
+
+  <script>
+    const socket = io("http://localhost:4000");
+
+    // รับข้อความใหม่จากเซิร์ฟเวอร์
+    socket.on("message", (data) => {
+      const messages = document.getElementById("messages");
+      const li = document.createElement("li");
+      li.textContent = `${data.message} (${new Date(data.created_at).toLocaleString()})`;
+      messages.appendChild(li);
+    });
+  </script>
+</body>
+</html>

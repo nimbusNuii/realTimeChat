@@ -1,7 +1,7 @@
 const express = require('express')
 
 const { MongoClient } = require("mongodb");
-const MONGO_URL = "mongoUrl"; // แก้ไข URL ตามการตั้งค่าของคุณ
+const MONGO_URL = "mongodb+srv://admin:OPbftDbfEW1IEu0W@workshop.tjr2w.mongodb.net/?retryWrites=true&w=majority&appName=workshop"; // แก้ไข URL ตามการตั้งค่าของคุณ
 const DB_NAME = "chat-workshop"; // ชื่อฐานข้อมูล
 
 let db;
@@ -18,6 +18,36 @@ MongoClient.connect(MONGO_URL, { useUnifiedTopology: true })
     });
 
 const app = express()
+
+// Socket io
+const http = require("http");
+const { Server } = require("socket.io");
+
+const socketServer = http.createServer(app); // สร้าง HTTP socketServer
+const io = new Server(socketServer,{
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+}); // ติดตั้ง Socket.io บน HTTP socketServer
+// Socket.io Events
+io.on("connection", (socket) => {
+    console.log(`A user connected: ${socket.id}`);
+  
+    // แสดงจำนวนผู้ใช้ที่เชื่อมต่อ
+    console.log(`Total connected users: ${io.engine.clientsCount}`);
+  
+    // เมื่อผู้ใช้ตัดการเชื่อมต่อ
+    socket.on("disconnect", () => {
+      console.log(`A user disconnected: ${socket.id}`);
+      console.log(`Total connected users: ${io.engine.clientsCount}`);
+    });
+  });
+  
+socketServer.listen(4000, () => {
+    console.log(`Socket.io listening on http://localhost:${4000}`);
+});
+
 
 app.use(express.json());
 
@@ -44,6 +74,7 @@ app.post('/', async (req, res) => {
     let newDoc = { message, created_at: new Date().valueOf() };
     try {
         const result = await collection.insertOne(newDoc);
+        io.emit("message", newDoc);
         return res.status(201).json({ message: "Document inserted", result });
     } catch (error) {
         return res.status(500).json({ error: "Failed to insert document", details: error });
